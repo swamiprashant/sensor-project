@@ -5,19 +5,19 @@ import pandas as pd
 from pymongo.mongo_client import MongoClient
 from zipfile import Path
 from src.constant import *
-from src.exception import CostumException
+from src.exception import CustomException
 from src.logger import logging
-from src.utils import main_utils
+from src.utils.main_utils import MainUtils
 from dataclasses import dataclass
 
 
 @dataclass
-class DataIngetionConfig:
+class DataIngestionConfig:
     artifact_folder:str = os.path.join(artifact_folder)
 
-class DataIngetion:
+class DataIngestion:
     def __init__(self):
-        self.data_ingetion_config = DataIngetionConfig()
+        self.data_ingetion_config = DataIngestionConfig()
         self.utils = MainUtils()
 
 
@@ -26,7 +26,7 @@ class DataIngetion:
             mongo_client = MongoClient(MONGO_DB_URL)
 
             collection_name = mongo_client[db_name][collection_name]
-            df = pd.DataFrame(list(collection.find()))
+            df = pd.DataFrame(list(collection_name.find()))
 
             if "_id" in df.columns.to_list():
                 df = df.drop(columns=['_id'], axis=1)
@@ -34,18 +34,18 @@ class DataIngetion:
 
             return df
         except Exception as e:
-            raise CustomException(e, error_details)
+            raise CustomException(e, sys)
         
     def export_data_into_feature_store_file_path(self)->pd.DataFrame:
         try:
-            loggign.info(f"Exporting data from mongodb")
+            logging.info(f"Exporting data from mongodb")
             raw_file_path= self.data_ingestion_confi.artifact_folder
             
             os.makedir(raw_file_path, exist_ok=True)
 
             sensor_data =self.export_collection_as_dataFrame(
-                collection_name=
-                db_name= MONGO_DATABASE_NAME
+                collection_name= MONGO_COLLECTION_NAME ,
+                db_name = MONGO_DATABASE_NAME
             )
 
             logging.info(f"saving exported data into feature store :{raw_file_path}")
@@ -59,7 +59,7 @@ class DataIngetion:
             raise CustomException(e, sys)
 
 
-    def initiate_data_ingetion(self) -> Path:
+    def initiate_data_ingestion(self) -> Path:
         logging.info("Entered initiated data ingestion method of data ingestion class")
 
         try:
@@ -71,4 +71,4 @@ class DataIngetion:
 
             return featuer_store_file_path
         except Exception as e:
-            raise CustomException (e, sys) from e
+            raise CustomException(e, sys) from e
